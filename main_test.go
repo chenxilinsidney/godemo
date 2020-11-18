@@ -43,8 +43,11 @@ func init() {
 }
 
 type User struct {
-	ID   string // field named `ID` will be used as a primary field by default
-	Name string
+	ID     uint
+	Name   string
+	Age    int
+	Gender string
+	// hundreds of fields
 }
 
 // TableName overrides the table name used by User to `profiles`
