@@ -42,6 +42,16 @@ func init() {
 	}
 }
 
+type User struct {
+	ID   string // field named `ID` will be used as a primary field by default
+	Name string
+}
+
+// TableName overrides the table name used by User to `profiles`
+func (User) TableName() string {
+	return "profiles"
+}
+
 func TestAPI(t *testing.T) {
 	// mysql
 	if value, ok := DB.Set("hello", "world").Get("hello"); !ok {
@@ -55,6 +65,22 @@ func TestAPI(t *testing.T) {
 	if _, ok := DB.Get("non_existing"); ok {
 		t.Errorf("Get non existing key should return error")
 	}
+	DB.AutoMigrate(&User{})
+	DB.Model(&User{}).Create([]map[string]interface{}{
+		{"Name": "jinzhu_1", "Age": 18},
+		{"Name": "jinzhu_1", "Age": 20},
+	})
+	rows, err := DB.Model(&User{}).Where("name = ?", "jinzhu_1").Rows()
+	defer rows.Close()
+
+	for rows.Next() {
+		var user User
+		// ScanRows is a method of `gorm.DB`, it can be used to scan a row into a struct
+		DB.ScanRows(rows, &user)
+		fmt.Println("values:", user)
+
+		// do something
+	}
 
 	// redis
 	rdb := redis.NewClient(&redis.Options{
@@ -63,7 +89,7 @@ func TestAPI(t *testing.T) {
 		DB:       0,  // use default DB
 	})
 
-	err := rdb.Set(ctx, "key", "value", 0).Err()
+	err = rdb.Set(ctx, "key", "value", 0).Err()
 	if err != nil {
 		panic(err)
 	}
